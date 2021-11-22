@@ -3,6 +3,7 @@
 #include <cerrno>
 #include <string.h>
 #include <Windows.h>
+#include <process.h>
 
 // 화면 이름 열거형 
 enum Menu {

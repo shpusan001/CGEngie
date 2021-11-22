@@ -1,8 +1,12 @@
 #include "CGEngine.h"
 
 void CGEngineStart(int(*dbEvent)());
+unsigned _stdcall eventThread(void* arg);
 
-
+struct DBEventPack {
+    int(*dbEvent)(char*);
+    char* message;
+};
 
 //화면 파일 정의
 const char* menuFileName[] = { "MainMenu.txt", "Person.txt", "Familly.txt", "Born.txt", "Marriage.txt", "Dead.txt" };
@@ -16,11 +20,35 @@ int main() {
 //엔진 시작 
 void CGEngineStart(int(*dbEvent)()) {
     eventHandler(dbEvent, "");
+    while (1) {}
 }
 
 //이벤트 핸들러
 int eventHandler(int(*dbEvent)(char*), char* message) {
+    
+    //스레드에 매개변수로 보낼 구조체 정의
+    struct DBEventPack* dbEventPack = malloc(sizeof(struct DBEventPack));
+    dbEventPack->dbEvent = dbEvent;
+    dbEventPack->message = message;
+
+    //스레드 시작
+    _beginthreadex(NULL, 0, eventThread, dbEventPack, 0, NULL);
+}
+
+//이벤트 스레드
+unsigned _stdcall eventThread(void* arg) {
+
+    //DBEventPack 구조체로 형 변환
+    struct DBEventPack* dbEventPack = arg;
+
+    int(*dbEvent)(char*) = dbEventPack->dbEvent;
+    char* message = dbEventPack->message;
+
+    //이벤트 실행
     dbEvent(message);
+
+    // 구조체 메모리 해제
+    free(dbEventPack);
 }
 
 //커서 이동
